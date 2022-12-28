@@ -1,17 +1,18 @@
 import React, { useContext, useEffect, useLayoutEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import api from '../../services/api';
+import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Switch } from 'react-native';
 import { AuthContext } from '../../contexts/AuthContext';
-import { Picker } from "@react-native-picker/picker";
+import { useRoute, useNavigation } from '@react-navigation/native';
 
-import { useIsFocused, useRoute, useNavigation } from '@react-navigation/native';
+import Ico from 'react-native-vector-icons/Feather'
+
+import api from '../../services/api';
+import colors from '../../services/colors';
 
 export default function Data() {
 
-    const { user } = useContext(AuthContext)
+    const { user, signOut } = useContext(AuthContext)
 
     const route = useRoute()
-    const focus = useIsFocused()
     const navigation = useNavigation()
 
     const [name, setNome] = useState(route.params?.name)
@@ -19,92 +20,99 @@ export default function Data() {
     const [phone, setPhone] = useState(route.params?.phone)
     const [email, setEmail] = useState('')
     const [region, setRegion] = useState('')
-    const [delivery, setDelivery] = useState('') 
 
-    const [deliverySelected, setDeliverySelected] = useState(false)// enviado na selecao picker
+    const [me, setMe] = useState([])
 
 
     useEffect(() => {
-        async function handleUser() {
+        async function Me() {
+            const response = await api.get('/me');
+            setMe(response?.data);
 
-            const {data} = await api.get(`/user?userID=${user.id}`)
-
-            setEmail(data.email)
-            setRegion(data.region.name)
-            setDelivery(data.userFormat?.delivery)
+            setEmail(response.data?.email)
+            setRegion(response.data?.region?.name)
         }
 
-        handleUser()
+        Me();
 
-    }, [])
 
+    }, []);
+
+    useLayoutEffect(() => {
+
+        navigation.setOptions({
+            headerStyle: {
+                backgroundColor: colors.app.base,
+                
+            },
+            headerTintColor:'#fff',
+            headerRight: () => {
+                return (
+                    <View style={{ flexDirection: 'row' }}>
+
+                        <TouchableOpacity
+                            style={styles.btns_saveexit}
+                            onPress={() => {
+                                Update()
+                            }}>
+                            <Ico style={styles.ico} name='thumbs-up' size={20} color={colors.util.white} />
+
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.btns_saveexit}
+                            onPress={signOut}>
+
+                            <Ico style={styles.ico} name='log-out' size={20} color={colors.util.white} />
+                        </TouchableOpacity>
+
+                    </View>
+                )
+            }
+        })
+    }, [name, bio, phone, email, region])
 
     async function Update() {
         await api.put(`/user?userID=${user.id}`, {
-            name: name,
-            bio: bio,
-            phone: phone,
+            name,
+            bio,
+            phone,
             headers: {
                 Authorization: `Bearer ${user.token}`,
             }
         })
 
-        await api.put(`/format?userID=${user.id}`, {
-            delivery: delivery,
-            headers: {
-                Authorization: `Bearer ${user.token}`,
-            }
-        })
 
     }
 
     return (
         <View style={styles.container}>
 
+            <StatusBar backgroundColor={colors.app.base} />
+
             <ScrollView style={styles.form}>
 
-                <TextInput placeholder='Nome' style={styles.input} value={name} onChangeText={setNome} />
-                <TextInput placeholder='Preço' style={styles.input} value={phone} onChangeText={setPhone} />
-                <TextInput autoCorrect={false} placeholder='Descrição' style={styles.input} value={bio} multiline={true} onChangeText={setBio} />
+                <TextInput placeholder='Nome' inlineImagePadding={50} inlineImageLeft='store'
+                    numberOfLines={1} maxLength={35}
+                    style={styles.input} value={name} onChangeText={setNome} />
 
-                <View style={styles.deliveryPicker}>
-                    <Picker
-                        style={styles.picker}
-                        mode="dropdown"
-                        selectedValue={delivery}
-                        onValueChange={(itemValue, itemIndex) => {
-                            setDelivery(itemValue);
-                        }}
-                    >
+                <TextInput placeholder='Whatsapp' inlineImagePadding={50} inlineImageLeft='whatsapp'
+                    numberOfLines={1} maxLength={11}
+                    style={styles.input} value={phone} onChangeText={setPhone} />
 
-                        <Picker.Item
-                            value={true}
-                            label="Sim, faço entregas"
-                            style={{ fontSize: 16 }}
-                        />
-                        <Picker.Item
-                            value={false}
-                            label="Não faço entregas"
-                            style={{ fontSize: 16 }}
-                        />
+                <TextInput autoCorrect={false} placeholder='Sobre a Loja' inlineImagePadding={50} inlineImageLeft='text_account'
+                    style={styles.input} value={bio} multiline={true} onChangeText={setBio} />
+
+                <TextInput editable={false} placeholder='Email' inlineImagePadding={50} inlineImageLeft='email'
+                    style={styles.input} value={email} onChangeText={setEmail} />
+
+                <TextInput editable={false} placeholder='Região' inlineImagePadding={50} inlineImageLeft='map'
+                    style={styles.input} value={region} />
 
 
-                    </Picker>
-                </View>
 
-                <TextInput editable={false} placeholder='Email' style={styles.input} value={email} onChangeText={setEmail} />
-                <TextInput editable={false} placeholder='Região' style={styles.input} value={region} />
 
             </ScrollView>
-
-            <TouchableOpacity activeOpacity={.8}
-                onPress={() => {
-                    Update()
-                    navigation.navigate('Home')
-                }
-                } style={styles.btnatualiar}>
-                <Text style={styles.txtbtn}>Atualizar...</Text>
-            </TouchableOpacity>
 
         </View>
     );
@@ -112,33 +120,33 @@ export default function Data() {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1
+        flex: 1,
     },
     form: {
-        padding: 15,
+        paddingHorizontal: 20,
+        marginVertical: 10,
         flex: 1
     },
-
     input: {
-        backgroundColor: "#fff",
-        paddingHorizontal: 16,
-        fontSize: 16,
-        margin: 2,
-        minHeight: 50,
+        height: 55,
+        fontSize:16,
+        backgroundColor: colors.util.white,
+        marginBottom: 8,
+        paddingHorizontal: 15,
+        borderRadius: 4,
     },
-    deliveryPicker: {
-        minHeight: 50,
-        margin: 2,
-        backgroundColor: "#fff",
-    },
-    btnatualiar: {
-        height: 50,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: "#fff"
-    },
-    txtbtn: {
-        fontSize: 16,
 
-    }
+    deliveryPicker: {
+        backgroundColor: colors.background_component,
+        marginBottom: 5,
+        borderRadius: 4,
+        height: 60,
+    },
+    btns_saveexit: {
+        width: 35,
+        alignItems: 'flex-end',
+        marginLeft: 15,
+        height: 50,
+        justifyContent:'center',
+    },
 })

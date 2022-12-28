@@ -9,45 +9,35 @@ import {
 } from "react-native";
 
 import { useNavigation } from "@react-navigation/native";
+import colors from "../../services/colors";
 
 const { width } = Dimensions.get("window");
 
 export default function Product({ item }) {
-  const path = "http://192.168.0.102:3333/files";
 
   const navigation = useNavigation();
+
   return (
     <TouchableOpacity
       onPress={() => navigation.navigate("Edition", item)}
       activeOpacity={0.8}
-      style={styles.containerproduct}
-    >
+      style={styles.containerproduct}>
+
       <Image
         style={styles.imageproduct}
-        source={{}}
-        // source={{ uri: `${path}/products/${item.image[0].filename}` }}
-      />
+        source={{}} />
 
-      <View
-        style={[
-          styles.containerprice,
-          {
-            backgroundColor: parseFloat(item.off) > 0 ? "#222" : "#fff",
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.priceproduct,
-            {
-              color: parseFloat(item.off) > 0 ? "#fff" : "#222",
-            },
-          ]}
-        >
-          {parseFloat(item.off)
-            ? parseFloat(item.off).toFixed(2)
-            : parseFloat(item.price).toFixed(2)}
+      <View style={styles.containerprice}>
+
+        <Text style={[styles.priceproduct, !!item.off && {textDecorationLine: 'line-through', backgroundColor: colors.util.white }]}>
+          {parseFloat(item.price).toFixed(2).replace('.', ',')}
         </Text>
+
+        {!!item.off &&
+          <Text style={[styles.priceproduct, { backgroundColor: !!item.off && colors.util.gold }]}>
+            OFF {parseFloat(item.off).toFixed(2).replace('.', ',')}
+          </Text>}
+
       </View>
     </TouchableOpacity>
   );
@@ -60,22 +50,20 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   imageproduct: {
-    backgroundColor:'#ffffff70',
+    backgroundColor: '#ffffff70',
     marginHorizontal: 2,
     flex: 1,
   },
   containerprice: {
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    marginTop: -26,
+    position: 'absolute',
     alignSelf: "flex-end",
     alignItems: "flex-end",
     justifyContent: "center",
-    margin: 4,
+    bottom: 5,
+    right: 8,
     borderRadius: 4,
   },
   priceproduct: {
-    fontWeight: "600",
     color: "#222",
   },
   btnsair: {

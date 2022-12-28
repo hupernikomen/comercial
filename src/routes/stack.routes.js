@@ -1,6 +1,5 @@
 import React from 'react';
 
-import {Text} from 'react-native'
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -8,17 +7,29 @@ import Edition from '../pages/Edition';
 import Home from '../pages/Home';
 import Data from '../pages/Data';
 import AddProducts from '../pages/AddProducts';
+import colors from '../services/colors';
 
 const Stack = createNativeStackNavigator()
 
 export default function StackRoutes() {
   return (
     <Stack.Navigator>
-      <Stack.Screen options={{ headerShown: false }} name='Home' component={Home} />
+
+      
+      <Stack.Screen 
+      options={{
+        
+        title:'',
+        headerShadowVisible:false,
+        headerTintColor:'#fff',
+      
+
+      }}
+      name='Home' component={Home} />
+
       <Stack.Screen options={{
         
         headerTitle: '',
-        headerShadowVisible: false,
         headerStyle: {
           backgroundColor: 'transparent',
         },
@@ -26,10 +37,6 @@ export default function StackRoutes() {
 
       <Stack.Screen options={{
         headerTitle: '',
-        headerShadowVisible: false,
-        headerStyle: {
-          backgroundColor: 'transparent',
-        },
       }} name='Data' component={Data} />
 
       <Stack.Screen
@@ -37,7 +44,6 @@ export default function StackRoutes() {
         component={AddProducts}
         options={{
           headerTitle: '',
-          headerShadowVisible: false,
           headerStyle: {
             backgroundColor: 'transparent',
           },

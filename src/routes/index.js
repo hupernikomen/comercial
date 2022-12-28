@@ -7,12 +7,9 @@ import { AuthContext } from '../contexts/AuthContext';
 
 export default function Routes() {
   const { isAutenticator, loadingAuth } = useContext(AuthContext);
-
   // const signed = isAutenticator
 
-  if (loadingAuth) {
-    return <ActivityIndicator />;
-  }
+  
 
   return isAutenticator ? <AppRoutes /> : <AuthRoutes />;
 }

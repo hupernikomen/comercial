@@ -11,8 +11,9 @@ import {
 
 import api from "../../services/api";
 
-import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
+import colors from "../../services/colors";
 
+import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
 import { Picker } from "@react-native-picker/picker";
 
 import { useNavigation, useIsFocused } from "@react-navigation/native";
@@ -34,9 +35,12 @@ export default function AddProducts() {
 
   const [selectedPicker, setSelectedPicker] = useState("Categoria");
 
-  const [resourcePath, setResoucePath] = useState([])
+  const [arrImagesSelect, setArrImagesSelect] = useState([])
+
+
 
   selectFile = () => {
+
     var options = {
       title: 'Selecione Fotos',
       storageOptions: {
@@ -44,10 +48,9 @@ export default function AddProducts() {
         path: 'files',
       },
     };
+
     launchImageLibrary(options, res => {
 
-
-      console.log('Response = ', res);
       if (res.didCancel) {
         console.log('User cancelled image picker');
       } else if (res.error) {
@@ -58,12 +61,15 @@ export default function AddProducts() {
       } else {
         let source = res;
 
-        setResoucePath(source.assets)
+        setArrImagesSelect(arrImagesSelect => [...arrImagesSelect, source.assets[0].uri])
       }
     });
+
+
   };
 
   imageGalery = () => {
+
     var options = {
       title: 'Selecione Fotos',
       storageOptions: {
@@ -71,8 +77,8 @@ export default function AddProducts() {
         path: 'files',
       },
     };
-    launchCamera(options, res => {
 
+    launchCamera(options, res => {
 
       console.log('Response = ', res);
       if (res.didCancel) {
@@ -85,10 +91,11 @@ export default function AddProducts() {
       } else {
         let source = res;
 
-        setResoucePath(source.assets)
+        setArrImagesSelect(arrImagesSelect => [...arrImagesSelect, source.assets[0].uri])
 
       }
     });
+
   };
 
 
@@ -100,48 +107,65 @@ export default function AddProducts() {
     }
 
     ShowCategories();
-    Limpar()
+
   }, [focus]);
 
-  function Limpar() {
-    setName("")
-    setDescription("")
-    setPrice("")
-    setSize("")
-    setColor("")
-    setSelectedPicker("")
+  function deleteItemImage(index) {
+    const arr = arrImagesSelect.filter(item => arrImagesSelect.indexOf(item) != index);
+    setArrImagesSelect(arr)
   }
+
+
 
   async function PostProduct() {
 
-    try {
-      if (name != "" && price != "" && description != "" && selectedPicker != "") {
-        await api
-          .post("/product", {
-            name: name,
-            description: description,
-            price: price,
-            off: '',
-            size: '',
-            color: '',
-            categoryID: selectedPicker,
-            userID: user.id,
-            headers: {
-              Authorization: `Bearer ${user.token}`,
-            },
-          })
-          .then(function (response) {
-            alert(response.data.mensagem);
-            Limpar()
-            navigation.navigate('Home')
-          })
-      } else {
-        alert('Algumas informações precisam ser preenchidas')
-      }
-    } catch (error) {
-      
-    }
 
+    try {
+
+      const data = new FormData()
+
+      if (name === '' || description === '' || price === '' || arrImagesSelect === '') {
+        console.log('Preencha Todos os Campos');
+        return
+      }
+
+      data.append('name', name)
+      data.append('description', description)
+      data.append('price', price)
+
+      arrImagesSelect.forEach(file => {
+        data.append('files', file)
+      })
+      data.append('categoryID', selectedPicker)
+      data.append('userID', user.id)
+
+
+      await api.post('/product', data)
+        .catch(function (error) {
+          if (error.response) {
+            // A requisição foi feita e o servidor respondeu com um código de status
+            // que sai do alcance de 2xx
+            console.error(error.response.data);
+            console.error(error.response.status);
+            console.error(error.response.headers);
+          } else if (error.request) {
+            // A requisição foi feita mas nenhuma resposta foi recebida
+            // `error.request` é uma instância do XMLHttpRequest no navegador e uma instância de
+            // http.ClientRequest no node.js
+            console.error(error.request);
+          } else {
+            // Alguma coisa acontenceu ao configurar a requisição que acionou este erro.
+            console.error('Error', error.message);
+          }
+          console.error('CONFIG', error.config);
+        });
+
+
+    } catch (error) {
+
+      console.error("error: ", error);
+
+    }
 
   }
 
@@ -149,42 +173,38 @@ export default function AddProducts() {
     <View style={styles.container}>
 
       <View style={styles.form}>
-        <ScrollView horizontal={true} style={styles.containerImage}>
-
-          {resourcePath.map((item, index) => {
+        <ScrollView horizontal={true} style={styles.container_image}>
+          {arrImagesSelect.map((item, index) => {
             return (
-
-              <Image
+              <TouchableOpacity
                 key={index}
-                source={{ uri: item.uri }}
-                style={styles.img}
-              />
+                onPress={() => deleteItemImage(index)}>
+
+                <Image
+                  source={{ uri: item }}
+                  style={styles.img}
+                />
+              </TouchableOpacity>
 
             )
           })}
         </ScrollView>
 
-        <View style={{flexDirection:'row',justifyContent:'space-around'}}>
-
-          <TouchableOpacity onPress={selectFile} style={styles.button}>
-            <Text style={styles.buttonText}>Galeria de Fotos</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={imageGalery} style={styles.button}>
-            <Text style={styles.buttonText}>Tirar Foto</Text>
-          </TouchableOpacity>
-
-        </View>
+        <TouchableOpacity onPress={selectFile}>
+          <Text>Foto</Text>
+        </TouchableOpacity>
 
 
         <TextInput
           value={name}
+          inlineImagePadding={40} inlineImageLeft='cube'
           style={styles.input}
           placeholder="Nome"
           onChangeText={setName}
         />
         <TextInput
           value={description}
+          inlineImagePadding={40} inlineImageLeft='text_long'
           style={styles.input}
           placeholder="Descrição"
           onChangeText={setDescription}
@@ -192,19 +212,19 @@ export default function AddProducts() {
         />
         <TextInput
           value={price}
+          inlineImagePadding={40} inlineImageLeft='currency'
           style={styles.input}
           placeholder="Preço"
           onChangeText={setPrice}
           keyboardType="decimal-pad"
-          inlineImageLeft='dollar-sign'
         />
 
         <TextInput
           value={size}
+          inlineImagePadding={40} inlineImageLeft='size'
           style={styles.input}
           placeholder="Tamanhos"
           onChangeText={setSize}
-          label={<Text>okokokok</Text>}
         />
 
         <Picker
@@ -233,6 +253,10 @@ export default function AddProducts() {
             );
           })}
         </Picker>
+
+        <TouchableOpacity onPress={PostProduct} style={styles.btn_postar}>
+          <Text style={styles.txtbtn_postar}>Postar Produto</Text>
+        </TouchableOpacity>
       </View>
 
     </View>
@@ -240,17 +264,22 @@ export default function AddProducts() {
 }
 
 const styles = StyleSheet.create({
-  containerImage: {
-    backgroundColor: '#fff',
+  container: {
+    flex: 1,
+  },
+  form: {
+    padding: 15,
+  },
+  container_image: {
     padding: 2
   },
-  button: {
+  btn_picture: {
     margin: 2,
     fontSize: 15,
     justifyContent: "center",
     height: 50,
   },
-  buttonText: {
+  txtbtn_picture: {
     textAlign: 'center',
     fontSize: 15,
   },
@@ -259,35 +288,30 @@ const styles = StyleSheet.create({
     height: 80,
     margin: 2
   },
-
-
-
-  container: {
-    flex: 1,
-  },
-  form: {
-    padding: 15,
-  },
   input: {
-    backgroundColor: "#fff",
-    paddingHorizontal: 16,
-    fontSize: 15,
-    margin: 2,
-    minHeight: 50,
+    height: 55,
+    backgroundColor: colors.util.white,
+    marginBottom: 8,
+    paddingHorizontal: 15,
+    borderRadius: 4,
   },
   picker: {
-    backgroundColor: "#fff",
-    fontSize: 15,
-    margin: 2,
-    height: 50,
+    backgroundColor: colors.util.white,
+    marginBottom: 8,
+    borderRadius: 4,
+    height: 55,
   },
-  btncadastrar: {
+  btn_postar: {
     height: 50,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+    borderRadius: 4,
+    marginVertical: 15,
+
   },
-  txtbtn: {
+  txtbtn_postar: {
+    color: '#fff',
+    fontWeight: '600',
     fontSize: 16,
   },
 });

@@ -21,12 +21,12 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
 
-    
+
     async function getUser() {
       const userData = await AsyncStorage.getItem('@authGuiaComercial')
-      
+
       let hasUser = JSON.parse(userData || '{}')
-      
+
       // verifica se tem um user no asyncStorage
       if (Object.keys(hasUser).length > 0) {
         api.defaults.headers.common['Authorization'] = `Bearer ${hasUser.token}`
@@ -36,46 +36,46 @@ export function AuthProvider({ children }) {
           email: hasUser.email,
           token: hasUser.token
         })
+      } else {
+        AsyncStorage.clear()
       }
 
-      
+
       setLoading(false)
-      
+
     }
     getUser()
 
   }, [])
 
+
+
   async function signIn({ email, password }) {
-
-    if (email == '' || password == '') { 
-      return 
-    }
     setLoadingAuth(true)
-
-    try {
-      const response = await api.post('/login', { email, password })
-      const { id, token } = response.data
-      const data = { ...response.data }
-
-      await AsyncStorage.setItem('@authGuiaComercial', JSON.stringify(data))
-
-      //Passar para todas as requisições o token do lojista logado
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-
-      setUser({
-        id,
-        email,
-        token
-      })
-
-      setLoadingAuth(false)
-
-    } catch (error) {
-      console.log('Erro ao acessar: ', error);
-      setLoadingAuth(false)
-
+    if (email == '' || password == '') {
+      return
     }
+    
+    const response = await api.post('/login', { email, password })
+
+
+    const { id, token } = response.data
+    const data = { ...response.data }
+
+
+    await AsyncStorage.setItem('@authGuiaComercial', JSON.stringify(data))
+
+    //Passar para todas as requisições o token do lojista logado
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+
+    setUser({
+      id,
+      email,
+      token
+    })
+
+    setLoadingAuth(false)
+
   }
 
   async function signOut() {
@@ -98,7 +98,7 @@ export function AuthProvider({ children }) {
       loadingAuth,
       loading,
       signIn,
-      signOut
+      signOut,
     }}>
       {children}
     </AuthContext.Provider>

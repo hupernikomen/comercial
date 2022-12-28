@@ -1,141 +1,106 @@
 import React, { useContext } from 'react';
-import { View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Image, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView } from 'react-native';
+import colors from '../../services/colors';
 
-import { useNavigation } from '@react-navigation/native';
-
-import Feather from 'react-native-vector-icons/Feather'
-
-import { AuthContext } from '../../contexts/AuthContext';
+import Ico from 'react-native-vector-icons/Feather'
 
 export default function HeaderUser(props) {
 
-  const navigation = useNavigation()
-
-  const { signOut } = useContext(AuthContext);
-
   return (
     <View style={styles.container_header}>
-      <View style={styles.container_avatar}>
-        <Image
-          style={styles.avatar}
-          source={{}}
-        />
-      </View>
+      <ScrollView style={styles.data}
+      showsHorizontalScrollIndicator={false}
+      horizontal
+      >
 
-      <View style={styles.data}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 }}>
+        <View style={styles.item_data}>
 
-          <Text ellipsizeMode="tail" numberOfLines={1} style={styles.name}>
-            {props.data?.userData?.name}
-          </Text>
-
-          <View style={styles.container_btns}>
-
-            <TouchableOpacity
-              style={styles.btn}
-              onPress={() => navigation.navigate("Add")}>
-
-              <Feather style={styles.ico} name='plus' size={18} color='#333' />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.btn}
-              onPress={() => navigation.navigate("Data", props.data?.userData)}>
-
-              <Feather style={styles.ico} name='edit-2' size={18} color='#333' />
-            </TouchableOpacity>
-
-
-            <TouchableOpacity
-              style={styles.btn}
-              onPress={signOut}>
-
-              <Feather style={styles.ico} name='log-out' size={18} color='#333' />
-            </TouchableOpacity>
-
+          <View>
+            <Text style={[styles.active,{backgroundColor: props.data?.active ? colors.util.dark: colors.util.red}]}>
+              {props.data?.active ? "ON" : "OFF"}
+            </Text>
           </View>
 
-        </View>
-
-        <View style={{ flexDirection: 'row' }}>
-
-          <Text style={styles.active}>
-            {props.data?.active && `${props.data?.products.length} produto${props.data?.products.length > 1 ? "s" : ""}`}
+          <Text style={[styles.txt_item_data, { width: props.data?.active ? 45 : 65}]}>
+            {props.data?.active ? `Loja Online` : `Loja Desativada`}
           </Text>
 
-          <Text style={{ color: 'green' }}>{props.data?.active ? ' - Online' : 'Loja Desativada'}</Text>
+        </View>
 
-          <TouchableOpacity style={styles.active}>
-            <Text>{!props.data?.active && 'Fale Conosco'}</Text>
-          </TouchableOpacity>
+        <View style={styles.item_data}>
+
+          <Text style={styles.active}>
+            {props.data?.products?.length}
+          </Text>
+
+          <Text style={[styles.txt_item_data,{ width: 80}]}>
+            produto{props.data?.products?.length > 1 && "s"} cadastrados
+          </Text>
 
         </View>
 
-        <Text style={styles.bio} ellipsizeMode="tail" numberOfLines={1}>
-          {props.data?.userData?.bio}
-        </Text>
 
-      </View>
+        {props.data?.userFormat?.delivery &&
+        <View style={styles.item_data}>
+          <Ico name='truck' size={24} color={colors.util.white} style={{marginRight:10}}/>
 
+          <Text style={[styles.txt_item_data,{ width: 80}]}>
+            Sou um Entregador
+          </Text>
 
+        </View>
+        }
 
-
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container_header: {
-    height: 110,
-    backgroundColor: '#fff',
-    elevation: 3,
-    zIndex: 99999,
-    padding: 14,
+    height: 50,
+    backgroundColor: colors.app.base,
+    zIndex: 9999,
+    paddingHorizontal: 15,
+    paddingBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    elevation: 5
   },
   container_avatar: {
     alignItems: 'center',
     justifyContent: 'center',
     width: 60,
-    height: 120,
     marginRight: 15,
     position: 'relative',
   },
   avatar: {
     backgroundColor: '#eee',
     borderRadius: 60 / 2,
-    width: 60,
-    height: 60,
-  },
-
-  container_btns: {
-    justifyContent: 'space-between',
-    flexDirection: 'row',
-
-    width: 110,
-    marginLeft: 30,
-  },
-  btn: {
-    alignItems: 'flex-end',
-    justifyContent: 'flex-end',
-    width: 30,
+    width: 50,
+    height: 50,
   },
   data: {
     flex: 1,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#222',
+    flexDirection: 'row'
   },
   bio: {
-    color: '#999',
-    fontSize: 13
+    color: '#fff',
+  },
+  item_data:{
+    flexDirection: 'row', alignItems: 'center', marginRight: 10,minWidth: 110  
+  },
+  txt_item_data:{
+    color: colors.util.gold, fontSize: 10
   },
   active: {
-    color: '#999',
-    fontSize: 13
+    color: '#fff',
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginRight: 5
   },
+  btn_contato: {
+    marginLeft: 5
+  }
 });
